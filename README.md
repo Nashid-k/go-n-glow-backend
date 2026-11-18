@@ -161,7 +161,7 @@ src/
 
 ## Development Notes
 
-- The OTP flow in `/auth/forgot-password` and `/auth/verify-otp` is mocked for development
+- The OTP flow is a development-only mock; password-reset routes return `501` in production until a real delivery and verification provider is configured
 - Default admin user must be created manually in the database
 - All passwords are hashed using bcrypt before storage
 - JWT tokens expire after 30 days
