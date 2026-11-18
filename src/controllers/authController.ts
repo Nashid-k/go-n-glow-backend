@@ -6,7 +6,7 @@ import { AuthRequest } from '../middleware/auth';
 
 // Generate JWT Token
 const generateToken = (id: string, role: string): string => {
-    return jwt.sign({ id, role }, process.env.JWT_SECRET || 'secret', {
+    const jwtSecret = process.env.JWT_SECRET;\n    if (!jwtSecret) throw new Error('JWT_SECRET must be configured.');\n    return jwt.sign({ id, role }, jwtSecret, {
         expiresIn: '30d',
     });
 };
