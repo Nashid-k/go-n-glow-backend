@@ -6,9 +6,9 @@ import { AuthRequest } from '../middleware/auth';
 
 // Generate JWT Token
 const generateToken = (id: string, role: string): string => {
-    const jwtSecret = process.env.JWT_SECRET;\n    if (!jwtSecret) throw new Error('JWT_SECRET must be configured.');\n    return jwt.sign({ id, role }, jwtSecret, {
-        expiresIn: '30d',
-    });
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) throw new Error('JWT_SECRET must be configured.');
+    return jwt.sign({ id, role }, jwtSecret, { expiresIn: '30d' });
 };
 
 // @desc    Register user
@@ -118,6 +118,9 @@ export const getMe = async (req: AuthRequest, res: Response) => {
 // @access  Public
 export const forgotPassword = async (req: Request, res: Response) => {
     try {
+        if (process.env.NODE_ENV === 'production') {
+            return res.status(501).json({ success: false, message: 'Password reset is not configured for production.' });
+        }
         const { email } = req.body;
 
         const user = await User.findOne({ email });
@@ -144,6 +147,9 @@ export const forgotPassword = async (req: Request, res: Response) => {
 // @access  Public
 export const verifyOTP = async (req: Request, res: Response) => {
     try {
+        if (process.env.NODE_ENV === 'production') {
+            return res.status(501).json({ success: false, message: 'Password reset is not configured for production.' });
+        }
         const { email, otp, newPassword } = req.body;
 
         // Mock OTP verification (in real app, check against stored OTP)
