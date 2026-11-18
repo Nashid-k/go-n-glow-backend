@@ -9,36 +9,31 @@ export interface AuthRequest extends Request {
 }
 
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    let token;
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const jwtSecret = process.env.JWT_SECRET;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
-            token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as {
-                id: string;
-                role: string;
-            };
-
-            req.user = decoded;
-            next();
-        } catch (error) {
-            res.status(401).json({ success: false, message: 'Not authorized, token failed' });
-        }
+    if (!jwtSecret) {
+        return res.status(500).json({ success: false, message: 'Authentication is not configured.' });
+    }
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Not authorized, no token' });
     }
 
-    if (!token) {
-        res.status(401).json({ success: false, message: 'Not authorized, no token' });
+    try {
+        const decoded = jwt.verify(token, jwtSecret) as { id: string; role: string };
+        req.user = decoded;
+        return next();
+    } catch {
+        return res.status(401).json({ success: false, message: 'Not authorized, token failed' });
     }
 };
 
 export const authorize = (...roles: string[]) => {
     return (req: AuthRequest, res: Response, next: NextFunction) => {
         if (!req.user || !roles.includes(req.user.role)) {
-            return res.status(403).json({
-                success: false,
-                message: `User role ${req.user?.role} is not authorized to access this route`,
-            });
+            return res.status(403).json({ success: false, message: 'User role is not authorized to access this route' });
         }
-        next();
+        return next();
     };
 };
